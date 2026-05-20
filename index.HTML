@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio Digital - Hamburgueria</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        // Configuração de cores do Tailwind
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            light: '#fbbf24', // amber-400
+                            DEFAULT: '#f59e0b', // amber-500
+                            dark: '#d97706', // amber-600
+                        },
+                        dark: {
+                            bg: '#111827', // gray-900
+                            card: '#1f2937', // gray-800
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Oculta scrollbar mantendo funcionalidade */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .modal-open { overflow: hidden; }
+    </style>
+</head>
+<body class="bg-dark-bg text-gray-100 font-sans antialiased pb-24">
+
+    <!-- ==========================================
+         CABEÇALHO E INFORMAÇÕES DA LOJA
+         ========================================== -->
+    <!-- ALTERE O NOME DA LOJA AQUI -->
+    <header class="bg-dark-card shadow-md sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-brand flex items-center justify-center text-dark-bg text-2xl">
+                    <i class="fa-solid fa-burger"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white">Bull's Burger</h1>
+                    <p class="text-xs text-gray-400 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span> Aberto agora
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navegação de Categorias -->
+        <nav class="container mx-auto px-4 py-3 overflow-x-auto no-scrollbar flex gap-4 border-t border-gray-700" id="category-nav">
+            <!-- Renderizado via JS -->
+        </nav>
+    </header>
+
+    <!-- ==========================================
+         LISTA DE PRODUTOS
+         ========================================== -->
+    <main class="container mx-auto px-4 mt-6" id="menu-container">
+        <!-- Renderizado via JS -->
+    </main>
+
+    <!-- ==========================================
+         BOTÃO FLUTUANTE DO CARRINHO
+         ========================================== -->
+    <button onclick="toggleCart()" id="floating-cart-btn" class="fixed bottom-6 right-6 bg-brand hover:bg-brand-dark text-dark-bg font-bold p-4 rounded-full shadow-lg shadow-brand/30 transition-transform transform hover:scale-105 z-40 hidden flex items-center gap-2">
+        <i class="fa-solid fa-shopping-cart"></i>
+        <span id="cart-count-badge" class="bg-dark-bg text-brand text-xs rounded-full px-2 py-1">0</span>
+    </button>
+
+    <!-- ==========================================
+         MODAL DE PRODUTO (EXTRAS)
+         ========================================== -->
+    <div id="product-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-end sm:items-center justify-center transition-opacity">
+        <div class="bg-dark-card w-full sm:w-[500px] max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl p-6 relative">
+            <button onclick="closeProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="product-modal-content">
+                <!-- Renderizado via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL DO CARRINHO & CHECKOUT
+         ========================================== -->
+    <div id="cart-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-end sm:items-center justify-center transition-opacity">
+        <div class="bg-dark-card w-full sm:w-[500px] h-[90vh] sm:h-auto sm:max-h-[90vh] rounded-t-2xl sm:rounded-2xl flex flex-col relative">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-basket-shopping mr-2 text-brand"></i> Seu Pedido</h2>
+                <button onclick="toggleCart()" class="text-gray-400 hover:text-white text-2xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 flex-1 overflow-y-auto" id="cart-items-container">
+                <!-- Itens renderizados aqui -->
+            </div>
+
+            <!-- Formulário de Checkout -->
+            <div class="p-5 border-t border-gray-700 bg-gray-900 rounded-b-2xl">
+                <!-- Cupom -->
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="coupon-input" placeholder="Cupom de desconto" class="w-full bg-dark-card border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand text-white uppercase">
+                    <button onclick="applyCoupon()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">Aplicar</button>
+                </div>
+
+                <!-- Nova Funcionalidade: Pergunta de UX (Talheres / Troco) -->
+                <div class="mb-4 bg-dark-card p-3 rounded-lg border border-gray-700">
+                    <label class="flex items-center gap-2 text-sm cursor-pointer mb-2">
+                        <input type="checkbox" id="need-cutlery" class="accent-brand w-4 h-4">
+                        <span>Precisa de talheres/guardanapos?</span>
+                    </label>
+                    <div class="mt-2">
+                        <label class="text-sm text-gray-300 block mb-1">Forma de Pagamento na Entrega:</label>
+                        <select id="payment-method" onchange="toggleChangeInput()" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-brand outline-none">
+                            <option value="Pix">Pix</option>
+                            <option value="Cartão de Crédito">Cartão de Crédito (Maquininha)</option>
+                            <option value="Cartão de Débito">Cartão de Débito (Maquininha)</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                        </select>
+                    </div>
+                    <!-- Campo de troco (Aparece apenas se Dinheiro for selecionado) -->
+                    <div id="change-container" class="mt-2 hidden">
+                        <input type="text" id="change-input" placeholder="Troco para quanto? (Ex: 50)" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-brand outline-none">
+                    </div>
+                </div>
+
+                <!-- Resumo Valores -->
+                <div class="space-y-2 mb-4 text-sm">
+                    <div class="flex justify-between text-gray-400"><span>Subtotal</span> <span id="cart-subtotal">R$ 0,00</span></div>
+                    <div class="flex justify-between text-green-400 hidden" id="discount-row"><span>Desconto</span> <span id="cart-discount">- R$ 0,00</span></div>
+                    <div class="flex justify-between text-white font-bold text-lg mt-2 pt-2 border-t border-gray-700">
+                        <span>Total</span> <span id="cart-total" class="text-brand">R$ 0,00</span>
+                    </div>
+                </div>
+                
+                <button onclick="finishOrder()" class="w-full bg-brand hover:bg-brand-dark text-dark-bg font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> Enviar Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         LÓGICA JAVASCRIPT
+         ========================================== -->
+    <script>
+        // --- CONFIGURAÇÕES DO LOJISTA ---
+        // ALTERE O NÚMERO DO WHATSAPP AQUI (Apenas números, inclua DDI e DDD)
+        const WHATSAPP_NUMBER = "5511999999999"; 
+        const COUPON_CODE = "PRIMEIRACOMPRA";
+        const DISCOUNT_PERCENT = 10;
+
+        // --- BANCO DE DADOS DE PRODUTOS ---
+        const menuData = [
+            {
+                category: "Burgers",
+                items: [
+                    { id: 1, name: "Smash Classic", desc: "Pão brioche artesanal, 2 smash burgers 90g, queijo cheddar duplo derretido e nosso molho especial da casa.", price: 28.00, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80", hasExtras: true },
+                    { id: 2, name: "Bacon Beast", desc: "Pão australiano, burger alto de 160g, tiras de bacon crocante, cheddar inglês e cebola caramelizada.", price: 36.00, img: "https://images.unsplash.com/photo-1594212848116-b8db5d8f8f20?auto=format&fit=crop&w=500&q=80", hasExtras: true },
+                    { id: 3, name: "Chicken Crispy", desc: "Pão brioche, sobrecoxa empanada super crocante, alface americana e maionese verde artesanal.", price: 30.00, img: "https://images.unsplash.com/photo-1606755962773-d324e0a13086?auto=format&fit=crop&w=500&q=80", hasExtras: true },
+                    { id: 4, name: "Veggie Supreme", desc: "Pão gergelim, suculento burger de grão de bico, queijo prato, rúcula fresca e tomate confit.", price: 32.00, img: "https://images.unsplash.com/photo-1520072959219-c595dc870360?auto=format&fit=crop&w=500&q=80", hasExtras: true }
+                ]
+            },
+            {
+                category: "Porções",
+                items: [
+                    { id: 5, name: "Batata Rústica", desc: "Porção de 400g de batatas rústicas temperadas com alecrim e páprica. Acompanha maionese da casa.", price: 22.00, img: "https://images.unsplash.com/photo-1576107246534-1188448b11c9?auto=format&fit=crop&w=500&q=80", hasExtras: false },
+                    { id: 6, name: "Nuggets Artesanais", desc: "10 unidades de nuggets de frango de verdade, empanados na panko. Acompanha molho barbecue.", price: 25.00, img: "https://images.unsplash.com/photo-1562967914-01efa7e87832?auto=format&fit=crop&w=500&q=80", hasExtras: false }
+                ]
+            },
+            {
+                category: "Bebidas",
+                items: [
+                    { id: 7, name: "Coca-Cola Lata", desc: "350ml - Geladinha", price: 6.00, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=500&q=80", hasExtras: false },
+                    { id: 8, name: "Suco de Laranja", desc: "500ml - Natural, espremido na hora.", price: 10.00, img: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=500&q=80", hasExtras: false }
+                ]
+            },
+            {
+                category: "Sobremesas",
+                items: [
+                    { id: 9, name: "Brownie com Sorvete", desc: "Brownie de chocolate belga servido quente com uma bola de sorvete de baunilha.", price: 20.00, img: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=500&q=80", hasExtras: false },
+                    { id: 10, name: "Milkshake de Morango", desc: "400ml de puro sabor morango, batido com sorvete artesanal e chantilly.", price: 22.00, img: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=500&q=80", hasExtras: false }
+                ]
+            }
+        ];
+
+        const extrasData = [
+            { id: 'e1', name: "Bacon Crocante Extra", price: 5.00 },
+            { id: 'e2', name: "Burger Extra (90g)", price: 8.00 },
+            { id: 'e3', name: "Cheddar Extra", price: 4.00 },
+            { id: 'e4', name: "Maionese Verde (Pote)", price: 3.00 }
+        ];
+
+        // --- ESTADO DO APLICATIVO ---
+        let cart = [];
+        let discountApplied = 0;
+        let currentProductSelection = null; // Produto aberto no modal
+
+        // --- FORMATADORES ---
+        const formatMoney = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        // --- RENDERIZAÇÃO INICIAL ---
+        function initApp() {
+            renderCategories();
+            renderMenu();
+        }
+
+        function renderCategories() {
+            const nav = document.getElementById('category-nav');
+            let html = '';
+            menuData.forEach((cat, index) => {
+                const isActive = index === 0 ? 'bg-brand text-dark-bg font-semibold' : 'bg-dark-card text-gray-300 border border-gray-600 hover:border-brand';
+                html += `<a href="#cat-${index}" class="px-4 py-2 rounded-full whitespace-nowrap text-sm transition ${isActive}">${cat.category}</a>`;
+            });
+            nav.innerHTML = html;
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('menu-container');
+            let html = '';
+            
+            menuData.forEach((cat, index) => {
+                html += `<div id="cat-${index}" class="pt-6 pb-2"><h2 class="text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2">${cat.category}</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+                
+                cat.items.forEach(item => {
+                    html += `
+                    <div class="bg-dark-card rounded-xl overflow-hidden shadow-lg border border-gray-800 flex flex-row h-36 hover:border-brand/50 transition cursor-pointer" onclick="openProductModal(${item.id})">
+                        <div class="w-1/3 h-full">
+                            <img src="${item.img}" alt="${item.name}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="w-2/3 p-3 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-gray-100 text-sm sm:text-base leading-tight">${item.name}</h3>
+                                <p class="text-gray-400 text-xs mt-1 line-clamp-2">${item.desc}</p>
+                            </div>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="font-bold text-brand">${formatMoney(item.price)}</span>
+                                <button class="w-8 h-8 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-brand hover:text-dark-bg transition">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                
+                html += `</div></div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // --- LÓGICA DO MODAL DE PRODUTO (EXTRAS) ---
+        function getProductById(id) {
+            for (let cat of menuData) {
+                const found = cat.items.find(i => i.id === id);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        function openProductModal(productId) {
+            const item = getProductById(productId);
+            if (!item) return;
+            
+            currentProductSelection = {
+                product: item,
+                selectedExtras: [],
+                quantity: 1
+            };
+
+            let extrasHtml = '';
+            if (item.hasExtras) {
+                extrasHtml = `<h4 class="font-semibold text-gray-300 mt-6 mb-3 text-sm">Adicionais (Opcional):</h4><div class="space-y-2">`;
+                extrasData.forEach(extra => {
+                    extrasHtml += `
+                    <label class="flex justify-between items-center bg-gray-900 p-3 rounded-lg border border-gray-700 cursor-pointer hover:border-brand transition">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" value="${extra.id}" class="accent-brand w-4 h-4" onchange="toggleExtra('${extra.id}', this.checked)">
+                            <span class="text-sm text-gray-200">${extra.name}</span>
+                        </div>
+                        <span class="text-sm text-brand font-medium">+ ${formatMoney(extra.price)}</span>
+                    </label>`;
+                });
+                extrasHtml += `</div>`;
+            }
+
+            document.getElementById('product-modal-content').innerHTML = `
+                <img src="${item.img}" class="w-full h-48 object-cover rounded-xl mb-4 shadow-md">
+                <h2 class="text-2xl font-bold text-white">${item.name}</h2>
+                <p class="text-gray-400 text-sm mt-2">${item.desc}</p>
+                
+                ${extrasHtml}
+
+                <div class="mt-6 flex items-center gap-4">
+                    <div class="flex items-center bg-gray-900 rounded-lg border border-gray-700">
+                        <button onclick="changeSelectionQty(-1)" class="w-10 h-10 text-gray-400 hover:text-white flex items-center justify-center"><i class="fa-solid fa-minus"></i></button>
+                        <span id="modal-qty" class="w-8 text-center text-white font-semibold">1</span>
+                        <button onclick="changeSelectionQty(1)" class="w-10 h-10 text-brand hover:text-brand-light flex items-center justify-center"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <button onclick="confirmAddToCart()" class="flex-1 bg-brand hover:bg-brand-dark text-dark-bg font-bold py-3 rounded-xl transition flex justify-between px-4">
+                        <span>Adicionar</span>
+                        <span id="modal-total-price">${formatMoney(item.price)}</span>
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('product-modal').classList.remove('hidden');
+            document.body.classList.add('modal-open');
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').classList.add('hidden');
+            document.body.classList.remove('modal-open');
+            currentProductSelection = null;
+        }
+
+        function toggleExtra(extraId, isChecked) {
+            if (!currentProductSelection) return;
+            if (isChecked) {
+                const extraInfo = extrasData.find(e => e.id === extraId);
+                currentProductSelection.selectedExtras.push(extraInfo);
+            } else {
+                currentProductSelection.selectedExtras = currentProductSelection.selectedExtras.filter(e => e.id !== extraId);
+            }
+            updateModalPrice();
+        }
+
+        function changeSelectionQty(delta) {
+            if (!currentProductSelection) return;
+            const newQty = currentProductSelection.quantity + delta;
+            if (newQty >= 1) {
+                currentProductSelection.quantity = newQty;
+                document.getElementById('modal-qty').innerText = newQty;
+                updateModalPrice();
+            }
+        }
+
+        function updateModalPrice() {
+            if (!currentProductSelection) return;
+            let basePrice = currentProductSelection.product.price;
+            let extrasPrice = currentProductSelection.selectedExtras.reduce((acc, curr) => acc + curr.price, 0);
+            let total = (basePrice + extrasPrice) * currentProductSelection.quantity;
+            document.getElementById('modal-total-price').innerText = formatMoney(total);
+        }
+
+        function confirmAddToCart() {
+            if (!currentProductSelection) return;
+            
+            // Cria um ID único baseado no produto + extras para evitar agrupar burgers com extras diferentes
+            const extrasKey = currentProductSelection.selectedExtras.map(e => e.id).sort().join('-');
+            const cartItemId = `${currentProductSelection.product.id}-${extrasKey}`;
+            
+            const existingItem = cart.find(i => i.cartItemId === cartItemId);
+            
+            if (existingItem) {
+                existingItem.quantity += currentProductSelection.quantity;
+            } else {
+                cart.push({
+                    cartItemId: cartItemId,
+                    product: currentProductSelection.product,
+                    extras: [...currentProductSelection.selectedExtras],
+                    quantity: currentProductSelection.quantity
+                });
+            }
+            
+            closeProductModal();
+            updateCartState();
+            
+            // Feedback visual do botão flutuante
+            const btn = document.getElementById('floating-cart-btn');
+            btn.classList.add('animate-bounce');
+            setTimeout(() => btn.classList.remove('animate-bounce'), 1000);
+        }
+
+        // --- LÓGICA DO CARRINHO ---
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                document.body.classList.add('modal-open');
+                renderCartItems();
+            } else {
+                modal.classList.add('hidden');
+                document.body.classList.remove('modal-open');
+            }
+        }
+
+        function updateCartState() {
+            const btn = document.getElementById('floating-cart-btn');
+            const badge = document.getElementById('cart-count-badge');
+            
+            const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+            badge.innerText = totalItems;
+            
+            if (totalItems > 0) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+                // Se zerar o carrinho, remover cupom
+                discountApplied = 0;
+                document.getElementById('coupon-input').value = '';
+            }
+            
+            if (!document.getElementById('cart-modal').classList.contains('hidden')) {
+                renderCartItems();
+            }
+        }
+
+        function removeCartItem(cartItemId) {
+            cart = cart.filter(item => item.cartItemId !== cartItemId);
+            updateCartState();
+        }
+
+        function changeCartQty(cartItemId, delta) {
+            const item = cart.find(i => i.cartItemId === cartItemId);
+            if (item) {
+                if (item.quantity + delta > 0) {
+                    item.quantity += delta;
+                } else {
+                    removeCartItem(cartItemId);
+                }
+                updateCartState();
+            }
+        }
+
+        function renderCartItems() {
+            const container = document.getElementById('cart-items-container');
+            
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-gray-500 py-10">
+                        <i class="fa-solid fa-basket-shopping text-4xl mb-3 text-gray-700"></i>
+                        <p>Seu carrinho está vazio.</p>
+                        <button onclick="toggleCart()" class="mt-4 text-brand underline text-sm">Continuar pedindo</button>
+                    </div>`;
+                updateTotals();
+                return;
+            }
+
+            let html = '<div class="space-y-4">';
+            cart.forEach(item => {
+                let extrasPrice = item.extras.reduce((acc, curr) => acc + curr.price, 0);
+                let itemTotal = (item.product.price + extrasPrice) * item.quantity;
+                
+                let extrasHtml = '';
+                if (item.extras.length > 0) {
+                    const extrasNames = item.extras.map(e => e.name).join(', ');
+                    extrasHtml = `<p class="text-xs text-gray-400 mt-1 italic">+ ${extrasNames}</p>`;
+                }
+
+                html += `
+                <div class="flex gap-3 bg-gray-900 p-3 rounded-lg border border-gray-700 relative">
+                    <img src="${item.product.img}" class="w-16 h-16 object-cover rounded-md">
+                    <div class="flex-1">
+                        <h4 class="text-sm font-bold text-gray-100 leading-tight">${item.product.name}</h4>
+                        ${extrasHtml}
+                        <div class="font-medium text-brand mt-1 text-sm">${formatMoney(itemTotal)}</div>
+                    </div>
+                    <div class="flex flex-col justify-between items-end">
+                        <button onclick="removeCartItem('${item.cartItemId}')" class="text-gray-500 hover:text-red-400 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                        <div class="flex items-center bg-dark-card rounded border border-gray-600">
+                            <button onclick="changeCartQty('${item.cartItemId}', -1)" class="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-white">-</button>
+                            <span class="w-6 text-center text-xs font-bold">${item.quantity}</span>
+                            <button onclick="changeCartQty('${item.cartItemId}', 1)" class="w-6 h-6 flex items-center justify-center text-brand hover:text-brand-light">+</button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+            updateTotals();
+        }
+
+        function updateTotals() {
+            let subtotal = 0;
+            cart.forEach(item => {
+                let extrasPrice = item.extras.reduce((acc, curr) => acc + curr.price, 0);
+                subtotal += (item.product.price + extrasPrice) * item.quantity;
+            });
+
+            document.getElementById('cart-subtotal').innerText = formatMoney(subtotal);
+
+            const discountRow = document.getElementById('discount-row');
+            let total = subtotal;
+
+            if (discountApplied > 0 && subtotal > 0) {
+                const discountValue = subtotal * (discountApplied / 100);
+                total = subtotal - discountValue;
+                document.getElementById('cart-discount').innerText = `- ${formatMoney(discountValue)}`;
+                discountRow.classList.remove('hidden');
+            } else {
+                discountRow.classList.add('hidden');
+            }
+
+            document.getElementById('cart-total').innerText = formatMoney(total);
+        }
+
+        function applyCoupon() {
+            if (cart.length === 0) return alert("Adicione itens ao carrinho primeiro.");
+            
+            const input = document.getElementById('coupon-input').value.trim().toUpperCase();
+            if (input === COUPON_CODE) {
+                discountApplied = DISCOUNT_PERCENT;
+                alert(`Cupom ${COUPON_CODE} aplicado com sucesso! ${DISCOUNT_PERCENT}% OFF.`);
+                updateTotals();
+            } else {
+                discountApplied = 0;
+                alert("Cupom inválido ou expirado.");
+                updateTotals();
+            }
+        }
+
+        // --- LÓGICA DA NOVA FUNCIONALIDADE UX (Formas de Pagamento e Troco) ---
+        function toggleChangeInput() {
+            const paymentSelect = document.getElementById('payment-method').value;
+            const changeContainer = document.getElementById('change-container');
+            if (paymentSelect === 'Dinheiro') {
+                changeContainer.classList.remove('hidden');
+            } else {
+                changeContainer.classList.add('hidden');
+                document.getElementById('change-input').value = '';
+            }
+        }
+
+        // --- INTEGRAÇÃO COM WHATSAPP ---
+        function finishOrder() {
+            if (cart.length === 0) {
+                alert("Seu carrinho está vazio!");
+                return;
+            }
+
+            let message = "*NOVO PEDIDO - BULL'S BURGER* 🍔\n\n";
+            message += "*Itens do Pedido:*\n";
+
+            let subtotal = 0;
+            cart.forEach(item => {
+                let extrasPrice = item.extras.reduce((acc, curr) => acc + curr.price, 0);
+                let itemTotal = (item.product.price + extrasPrice) * item.quantity;
+                subtotal += itemTotal;
+
+                message += `▪ ${item.quantity}x ${item.product.name} - ${formatMoney(itemTotal)}\n`;
+                if (item.extras.length > 0) {
+                    item.extras.forEach(ext => {
+                        message += `   _+ ${ext.name}_\n`;
+                    });
+                }
+            });
+
+            message += `\n*Resumo Financeiro:*\n`;
+            message += `Subtotal: ${formatMoney(subtotal)}\n`;
+            
+            let total = subtotal;
+            if (discountApplied > 0) {
+                const discountValue = subtotal * (discountApplied / 100);
+                total = subtotal - discountValue;
+                message += `Desconto (${discountApplied}%): - ${formatMoney(discountValue)}\n`;
+            }
+            message += `*TOTAL A PAGAR: ${formatMoney(total)}*\n\n`;
+
+            // Informações de Entrega/UX
+            const needsCutlery = document.getElementById('need-cutlery').checked ? "Sim" : "Não";
+            const paymentMethod = document.getElementById('payment-method').value;
+            const changeInput = document.getElementById('change-input').value.trim();
+            
+            message += `*Detalhes de Entrega:*\n`;
+            message += `Talheres/Guardanapos: ${needsCutlery}\n`;
+            message += `Pagamento: ${paymentMethod}\n`;
+            if (paymentMethod === 'Dinheiro' && changeInput !== '') {
+                message += `Troco para: R$ ${changeInput}\n`;
+            }
+
+            message += `\n_Por favor, informe seu endereço e endereço de entrega abaixo:_`;
+
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
+        }
+
+        // Inicia a aplicação
+        window.onload = initApp;
+    </script>
+</body>
+</html>
